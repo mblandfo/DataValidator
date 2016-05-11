@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title> Data Validator </title>
+    <link rel="stylesheet" href="normalize.css" type="text/css" />
+    <link rel="stylesheet" href="main.css" type="text/css" />
+    <script src="data/nameData.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="lib/jquery.csv.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.11.2/lodash.min.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>   
+    <script src="dataValidator.js"></script>
+</head>
+<body>
+    <div class="info">
+        <div>
+            Want to see what kinds of errors this utility catches? <input id="runTestsBtn" type="button" value="Run the Tests" />
+        </div>
+        <p>
+            Dropping a csv file will run basic validation on it. The first row should be the header row. Based on the name of the header, different validations can be run on the column. This validation is designed to catch typos in entered data, but it is not guaranteed to catch everything.
+        </p>
+        <ul>
+            <li> Name validation will be run if the header is named FirstName or LastName </li>
+            <li> Title validation will be run if the header is named Title </li>
+            <li> Email validation will be run if the header is named Email </li>
+        </ul>
+    </div>
+    <div id="drop_zone">Drop a .csv file here</div>
+    <output id="list"></output>
+
+    <div id="log">
+
+    </div>
+</body>
+</html>
