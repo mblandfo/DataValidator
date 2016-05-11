@@ -1,7 +1,7 @@
 var static = require('node-static');
 
 var clientCacheHours = 24;
-var file = new static.Server('.', { 
+var file = new static.Server('./public', { 
 	cache: clientCacheHours * 60 * 60,
 	gzip: true
 });
