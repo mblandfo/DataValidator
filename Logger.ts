@@ -35,4 +35,8 @@
     logFailure(msg: string) {
         this.logClass(msg, 'logFailure');
     }
+
+    logWarning(msg: string) {
+        this.logClass(msg, 'logWarning');
+    }
 }

@@ -23,6 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\nameData.js" />
+    <Content Include="gulpfile.js" />
+    <Content Include="index.js" />
     <Content Include="main.css" />
     <Content Include="index.html" />
     <Content Include="lib\jquery.csv.min.js" />
@@ -41,6 +43,7 @@
     <TypeScriptCompile Include="main.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Procfile" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>

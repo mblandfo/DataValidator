@@ -2,23 +2,32 @@
     constructor(private logger: Logger) { }
 
     validate(csvData) {
-        if (csvData.length === 0) {
-            return;
-        }
+        var rowNum = 0;
+        try {
+            if (csvData.length === 0) {
+                this.logger.clear();
+                this.logger.logFailure('File was empty');
+                return;
+            }
 
-        var validators = this.getValidators(csvData);
-        if (validators.length === 0) {
-            this.logger.setLogTitle('No columns that need validation were found');
-            return;
-        }
+            var validators = this.getValidators(csvData);
+            if (validators.length === 0) {
+                this.logger.clear();
+                this.logger.logFailure('No columns that need validation were found');
+                return;
+            }
 
-        var msg = 'Columns to validate: ';
-        msg += _.map(validators, v => _.escape(v.columnName)).join(', ');
-        this.logger.setLogTitle(msg);
-        for (var i = 0; i < csvData.length; i++) {
-            var rowNum = i + 2;
-            this.checkValidationErrors(rowNum, csvData[i], validators);
-        }
+            var msg = 'Validating the following columns from your file: ';
+            msg += _.map(validators, v => _.escape(v.columnName)).join(', ');
+            this.logger.setLogTitle(msg);
+            for (var i = 0; i < csvData.length; i++) {
+                rowNum = i + 2;
+                this.checkValidationErrors(rowNum, csvData[i], validators);
+            }
+            this.logger.log('Done! ' + csvData.length + ' rows validated!');
+        } catch (e) {
+            this.logger.logFailure(`Row ${rowNum}: ERROR! ` + e.stack || e.toString());
+        }        
     }
 
     checkValidationErrors(rowNum: number, row: any, validators: ColumnValidator[]) {
@@ -69,6 +78,9 @@ class FirstNameValidator implements ColumnValidator {
 
     validate(row: any) {
         var data = row[this.columnName];
+        if (!data) {
+            return `${this.columnName} was empty`;
+        }
 
         //if (data.length > 3 && data.match(/\s[A-Z]\.$/)) {
         //    data = data.substring(0, data.length - 3);
@@ -91,6 +103,10 @@ class FirstNameValidator implements ColumnValidator {
         //if (!known) {
         //    return `${this.columnName} contains unknown first name: "${data}"`;
         //}
+
+        if (!data.match(/^[A-Za-z\.]*$/)) {
+            return `${this.columnName} has unusual characters: "${data}"`;
+        }
     }
 }
 
@@ -99,12 +115,15 @@ class LastNameValidator implements ColumnValidator {
 
     validate(row: any): string {
         var data: string = row[this.columnName];
-        
+        if (!data) {
+            return `${this.columnName} was empty`;
+        }
+
         var isHyphenated = data.indexOf('-') >= 0;
 
         if (!isHyphenated) {
             if (!this.validateLastName(data)) {
-                return `${this.columnName} suspicious last name: "${data}"`;
+                return `${this.columnName} looks suspicious: "${data}"`;
             } else {
                 return;
             }
@@ -118,6 +137,10 @@ class LastNameValidator implements ColumnValidator {
         var looksValid = _.every(nameParts, part => this.validateLastName(part));
         if (!looksValid) {
             return `${this.columnName} looks suspicious: "${data}"`;
+        }
+
+        if (!data.match(/^[A-Za-z\.\-']*$/)) {
+            return `${this.columnName} has unusual characters: "${data}"`;
         }
     }
 
@@ -139,11 +162,14 @@ class TitleValidator implements ColumnValidator {
 
     validate(row: any) {
         var data: string = row[this.columnName];
+        if (!data) {
+            return `${this.columnName} was empty`;
+        }
 
         var str = data.replace(TitleValidator.symbolRegex, ' ');
 
         var filteredParts = _.filter(str.split(' '), x => x);
-
+        
         var startsWithFirstPart = data.indexOf(filteredParts[0]) === 0;
         var lastPart = _.last(filteredParts);
         var endsWithLastPart = data.indexOf(lastPart) === data.length - lastPart.length;
@@ -155,6 +181,10 @@ class TitleValidator implements ColumnValidator {
         if (!ValidationUtil.IsTitleCaseOrAcronymPhrase(filteredParts)) {
             return `${this.columnName} not in title case: "${data}"`;
         }
+
+        if (_.some(filteredParts, part => !part.match(/^[A-Za-z\.\(\)]*$/))) {
+            return `${this.columnName} has unusual characters: "${data}"`;
+        }
     }
 }
 
@@ -163,8 +193,19 @@ class EmailValidator implements ColumnValidator {
 
     validate(row: any) {
         var data = row[this.columnName];
+        if (!data) {
+            return `${this.columnName} was empty`;
+        }
+        if (data.match(/\s/)) {
+            return `${this.columnName} contains white space: "${data}"`;
+        }
+
         if (ValidationUtil.IsSuspiciousLookingEmail(data)) {
             return `${this.columnName} looks suspicious: "${data}"`;
+        }
+
+        if (!data.match(/^[A-Za-z\.@]*$/)) {
+            return `${this.columnName} has unusual characters: "${data}"`; 
         }
     }
 }

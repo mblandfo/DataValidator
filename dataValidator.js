@@ -25,6 +25,9 @@ var Logger = (function () {
     Logger.prototype.logFailure = function (msg) {
         this.logClass(msg, 'logFailure');
     };
+    Logger.prototype.logWarning = function (msg) {
+        this.logClass(msg, 'logWarning');
+    };
     return Logger;
 })();
 $(function () {
@@ -342,20 +345,30 @@ var Validator = (function () {
         this.logger = logger;
     }
     Validator.prototype.validate = function (csvData) {
-        if (csvData.length === 0) {
-            return;
+        var rowNum = 0;
+        try {
+            if (csvData.length === 0) {
+                this.logger.clear();
+                this.logger.logFailure('File was empty');
+                return;
+            }
+            var validators = this.getValidators(csvData);
+            if (validators.length === 0) {
+                this.logger.clear();
+                this.logger.logFailure('No columns that need validation were found');
+                return;
+            }
+            var msg = 'Validating the following columns from your file: ';
+            msg += _.map(validators, function (v) { return _.escape(v.columnName); }).join(', ');
+            this.logger.setLogTitle(msg);
+            for (var i = 0; i < csvData.length; i++) {
+                rowNum = i + 2;
+                this.checkValidationErrors(rowNum, csvData[i], validators);
+            }
+            this.logger.log('Done! ' + csvData.length + ' rows validated!');
         }
-        var validators = this.getValidators(csvData);
-        if (validators.length === 0) {
-            this.logger.setLogTitle('No columns that need validation were found');
-            return;
-        }
-        var msg = 'Columns to validate: ';
-        msg += _.map(validators, function (v) { return _.escape(v.columnName); }).join(', ');
-        this.logger.setLogTitle(msg);
-        for (var i = 0; i < csvData.length; i++) {
-            var rowNum = i + 2;
-            this.checkValidationErrors(rowNum, csvData[i], validators);
+        catch (e) {
+            this.logger.logFailure(("Row " + rowNum + ": ERROR! ") + e.stack || e.toString());
         }
     };
     Validator.prototype.checkValidationErrors = function (rowNum, row, validators) {
@@ -402,6 +415,9 @@ var FirstNameValidator = (function () {
     }
     FirstNameValidator.prototype.validate = function (row) {
         var data = row[this.columnName];
+        if (!data) {
+            return this.columnName + " was empty";
+        }
         //if (data.length > 3 && data.match(/\s[A-Z]\.$/)) {
         //    data = data.substring(0, data.length - 3);
         //}
@@ -418,6 +434,9 @@ var FirstNameValidator = (function () {
         //if (!known) {
         //    return `${this.columnName} contains unknown first name: "${data}"`;
         //}
+        if (!data.match(/^[A-Za-z\.]*$/)) {
+            return this.columnName + " has unusual characters: \"" + data + "\"";
+        }
     };
     return FirstNameValidator;
 })();
@@ -428,10 +447,13 @@ var LastNameValidator = (function () {
     LastNameValidator.prototype.validate = function (row) {
         var _this = this;
         var data = row[this.columnName];
+        if (!data) {
+            return this.columnName + " was empty";
+        }
         var isHyphenated = data.indexOf('-') >= 0;
         if (!isHyphenated) {
             if (!this.validateLastName(data)) {
-                return this.columnName + " suspicious last name: \"" + data + "\"";
+                return this.columnName + " looks suspicious: \"" + data + "\"";
             }
             else {
                 return;
@@ -444,6 +466,9 @@ var LastNameValidator = (function () {
         var looksValid = _.every(nameParts, function (part) { return _this.validateLastName(part); });
         if (!looksValid) {
             return this.columnName + " looks suspicious: \"" + data + "\"";
+        }
+        if (!data.match(/^[A-Za-z\.\-']*$/)) {
+            return this.columnName + " has unusual characters: \"" + data + "\"";
         }
     };
     LastNameValidator.prototype.validateLastName = function (lastName) {
@@ -464,6 +489,9 @@ var TitleValidator = (function () {
     }
     TitleValidator.prototype.validate = function (row) {
         var data = row[this.columnName];
+        if (!data) {
+            return this.columnName + " was empty";
+        }
         var str = data.replace(TitleValidator.symbolRegex, ' ');
         var filteredParts = _.filter(str.split(' '), function (x) { return x; });
         var startsWithFirstPart = data.indexOf(filteredParts[0]) === 0;
@@ -475,6 +503,9 @@ var TitleValidator = (function () {
         if (!ValidationUtil.IsTitleCaseOrAcronymPhrase(filteredParts)) {
             return this.columnName + " not in title case: \"" + data + "\"";
         }
+        if (_.some(filteredParts, function (part) { return !part.match(/^[A-Za-z\.\(\)]*$/); })) {
+            return this.columnName + " has unusual characters: \"" + data + "\"";
+        }
     };
     TitleValidator.symbolRegex = /, |\/| - | – | & |-|–|&/g;
     return TitleValidator;
@@ -485,8 +516,17 @@ var EmailValidator = (function () {
     }
     EmailValidator.prototype.validate = function (row) {
         var data = row[this.columnName];
+        if (!data) {
+            return this.columnName + " was empty";
+        }
+        if (data.match(/\s/)) {
+            return this.columnName + " contains white space: \"" + data + "\"";
+        }
         if (ValidationUtil.IsSuspiciousLookingEmail(data)) {
             return this.columnName + " looks suspicious: \"" + data + "\"";
+        }
+        if (!data.match(/^[A-Za-z\.@]*$/)) {
+            return this.columnName + " has unusual characters: \"" + data + "\"";
         }
     };
     return EmailValidator;

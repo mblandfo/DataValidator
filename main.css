@@ -48,6 +48,10 @@ body {
     color: red;
 }
 
+.logWarning {
+    color: #C2A702;
+}
+
 .logTitle {
 
 }
