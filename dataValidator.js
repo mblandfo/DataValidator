@@ -525,7 +525,7 @@ var EmailValidator = (function () {
         if (ValidationUtil.IsSuspiciousLookingEmail(data)) {
             return this.columnName + " looks suspicious: \"" + data + "\"";
         }
-        if (!data.match(/^[A-Za-z\.@]*$/)) {
+        if (!data.match(/^[A-Za-z0-9\.@]*$/)) {
             return this.columnName + " has unusual characters: \"" + data + "\"";
         }
     };
