@@ -228,6 +228,7 @@ var TestRunner = (function () {
         test("John", false);
         test("john.com", false);
         test("Mike.Johnson@aol.com", true);
+        test('John_Samson@john-samson.ti.us', true);
     };
     return TestRunner;
 })();
@@ -525,7 +526,7 @@ var EmailValidator = (function () {
         if (ValidationUtil.IsSuspiciousLookingEmail(data)) {
             return this.columnName + " looks suspicious: \"" + data + "\"";
         }
-        if (!data.match(/^[A-Za-z0-9\.@]*$/)) {
+        if (!data.match(/^[A-Za-z0-9\-_\.@]*$/)) {
             return this.columnName + " has unusual characters: \"" + data + "\"";
         }
     };

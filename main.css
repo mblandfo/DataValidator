@@ -35,6 +35,10 @@ body {
     color: #47d0fd;
 }
 
+p {
+    max-width: 1000px;
+}
+
 #log {
     flex: 1 1 60%;
     overflow: auto;

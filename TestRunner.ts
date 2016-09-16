@@ -164,6 +164,7 @@
         test("John", false);
         test("john.com", false);
         test("Mike.Johnson@aol.com", true);
+        test('John_Samson@john-samson.ti.us', true);
     }
 
 }

@@ -204,7 +204,7 @@ class EmailValidator implements ColumnValidator {
             return `${this.columnName} looks suspicious: "${data}"`;
         }
 
-        if (!data.match(/^[A-Za-z0-9\.@]*$/)) {
+        if (!data.match(/^[A-Za-z0-9\-_\.@]*$/)) {
             return `${this.columnName} has unusual characters: "${data}"`; 
         }
     }
